@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 
+interface Sector {
+  name: string
+  id: string
+  stocks: string[]
+}
+
 interface WatchlistStock {
   symbol: string
   name: string
+  sector: string
   business: string
   buyReason: string
   targetEntry: number | null
@@ -30,11 +37,13 @@ const FMP_API_KEY = 'WKxcam5hR0ZB8zpHAvarAe5ZxDHh9nz6'
 
 function App() {
   const [stocks, setStocks] = useState<StockData[]>([])
+  const [sectors, setSectors] = useState<Sector[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null)
   const [watchlist, setWatchlist] = useState<WatchlistStock[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [groupBySector, setGroupBySector] = useState(true)
 
   // Load watchlist data
   useEffect(() => {
@@ -42,6 +51,7 @@ function App() {
       .then(res => res.json())
       .then(data => {
         setWatchlist(data.stocks)
+        setSectors(data.sectors || [])
       })
       .catch(err => {
         console.error('Failed to load watchlist:', err)
@@ -56,7 +66,6 @@ function App() {
     setError(null)
     try {
       const symbols = watchlist.map(w => w.symbol).join(',')
-      // Using FMP API (supports CORS)
       const response = await fetch(
         `https://financialmodelingprep.com/api/v3/quote/${symbols}?apikey=${FMP_API_KEY}`
       )
@@ -100,11 +109,7 @@ function App() {
         })
         .filter((item): item is StockData => item !== null)
       
-      // Sort: buy > alert > near > watch
-      setStocks(results.sort((a, b) => {
-        const priority = { buy: 0, alert: 1, near: 2, watch: 3 }
-        return priority[a.status] - priority[b.status]
-      }))
+      setStocks(results)
       setLastUpdate(new Date())
     } catch (err) {
       console.error('Error fetching stock data:', err)
@@ -116,7 +121,7 @@ function App() {
   useEffect(() => {
     if (watchlist.length > 0) {
       fetchStockData()
-      const interval = setInterval(fetchStockData, 60000) // 60 seconds for FMP rate limit
+      const interval = setInterval(fetchStockData, 60000)
       return () => clearInterval(interval)
     }
   }, [watchlist])
@@ -143,9 +148,127 @@ function App() {
     setExpandedSymbol(expandedSymbol === symbol ? null : symbol)
   }
 
+  const renderStockCard = (stock: StockData) => (
+    <div 
+      key={stock.symbol}
+      className={`rounded-xl border-l-4 ${getStatusColor(stock.status)} overflow-hidden`}
+    >
+      <div 
+        className="p-4 cursor-pointer active:bg-slate-700/30 transition-colors"
+        onClick={() => toggleExpand(stock.symbol)}
+      >
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-lg">{stock.symbol}</span>
+              {getStatusBadge(stock.status)}
+            </div>
+            <div className="text-xs text-slate-400 mt-0.5">{stock.name}</div>
+            <div className="text-xs text-slate-500 mt-1 line-clamp-1">{stock.business}</div>
+          </div>
+          <div className="text-right ml-2">
+            <div className="font-mono font-bold text-xl">
+              ${stock.price.toFixed(2)}
+            </div>
+            <div className={`text-sm font-mono ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+              {stock.change >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
+            </div>
+          </div>
+        </div>
+        
+        {stock.targetEntry && (
+          <div className="mt-3">
+            <div className="flex justify-between text-xs text-slate-400 mb-1">
+              <span>目標 ${stock.targetEntry}</span>
+              <span>
+                {stock.price <= stock.targetEntry 
+                  ? '✅ 已到價！' 
+                  : `差 ${stock.distancePercent?.toFixed(1)}%`
+                }
+              </span>
+            </div>
+            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div 
+                className={`h-full transition-all ${stock.price <= stock.targetEntry ? 'bg-green-500' : 'bg-blue-500'}`}
+                style={{ width: `${Math.min(100, (stock.targetEntry / stock.price) * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
+        
+        <div className="text-center text-slate-500 text-xs mt-2">
+          {expandedSymbol === stock.symbol ? '▲ 收起' : '▼ 展開詳情'}
+        </div>
+      </div>
+      
+      {expandedSymbol === stock.symbol && (
+        <div className="px-4 pb-4 border-t border-slate-700 pt-3 space-y-3 bg-slate-800/50">
+          <div>
+            <div className="text-xs text-blue-400 font-semibold mb-1">💡 推薦原因</div>
+            <div className="text-sm text-slate-300">{stock.buyReason}</div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <div className="text-xs text-green-400 font-semibold mb-1">🎯 進場建議</div>
+              <div className="text-sm text-slate-300">{stock.entryNote}</div>
+            </div>
+            <div>
+              <div className="text-xs text-purple-400 font-semibold mb-1">⏱️ 持有週期</div>
+              <div className="text-sm text-slate-300">{stock.holdPeriod}</div>
+            </div>
+          </div>
+          
+          <div>
+            <div className="text-xs text-orange-400 font-semibold mb-1">🚪 出場策略</div>
+            <div className="text-sm text-slate-300">{stock.exitStrategy}</div>
+          </div>
+          
+          {stock.stopLoss && (
+            <div>
+              <div className="text-xs text-red-400 font-semibold mb-1">🛑 停損</div>
+              <div className="text-sm text-slate-300">{typeof stock.stopLoss === 'number' ? `$${stock.stopLoss}` : stock.stopLoss}</div>
+            </div>
+          )}
+          
+          {stock.invalidIf && (
+            <div>
+              <div className="text-xs text-red-400 font-semibold mb-1">⚠️ 論點失效</div>
+              <div className="text-sm text-slate-300">{stock.invalidIf}</div>
+            </div>
+          )}
+          
+          {stock.catalyst && (
+            <div>
+              <div className="text-xs text-yellow-400 font-semibold mb-1">📅 催化劑</div>
+              <div className="text-sm text-slate-300">{stock.catalyst}</div>
+            </div>
+          )}
+          
+          <div className="text-xs text-slate-500 pt-2 border-t border-slate-700">
+            📖 來源：{stock.source}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  const getSectorStats = (sectorId: string) => {
+    const sectorStocks = stocks.filter(s => s.sector === sectorId)
+    const buyCount = sectorStocks.filter(s => s.status === 'buy').length
+    const nearCount = sectorStocks.filter(s => s.status === 'near').length
+    const alertCount = sectorStocks.filter(s => s.status === 'alert').length
+    return { buyCount, nearCount, alertCount, total: sectorStocks.length }
+  }
+
+  const sortedStocks = [...stocks].sort((a, b) => {
+    const priority = { buy: 0, alert: 1, near: 2, watch: 3 }
+    return priority[a.status] - priority[b.status]
+  })
+
   return (
     <div className="min-h-screen bg-slate-900 text-white p-4 pb-20">
-      <header className="mb-6">
+      <header className="mb-4">
         <h1 className="text-2xl font-bold text-center">📊 Mimi Watchlist</h1>
         <p className="text-center text-slate-400 text-sm mt-1">
           MimiVsJames 推薦追蹤
@@ -154,6 +277,28 @@ function App() {
           {lastUpdate ? `更新於 ${lastUpdate.toLocaleTimeString()}` : '載入中...'}
         </p>
       </header>
+
+      {/* View Toggle */}
+      <div className="flex justify-center mb-4">
+        <div className="inline-flex rounded-lg bg-slate-800 p-1">
+          <button
+            onClick={() => setGroupBySector(false)}
+            className={`px-3 py-1 rounded-md text-sm transition-colors ${
+              !groupBySector ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            📋 狀態排序
+          </button>
+          <button
+            onClick={() => setGroupBySector(true)}
+            className={`px-3 py-1 rounded-md text-sm transition-colors ${
+              groupBySector ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            🏷️ 板塊分組
+          </button>
+        </div>
+      </div>
 
       {error && (
         <div className="bg-red-500/20 border border-red-500 rounded-lg p-3 mb-4 text-center text-red-300">
@@ -166,115 +311,54 @@ function App() {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           <p className="text-slate-400 text-sm">取得股價中...</p>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {stocks.map(stock => (
-            <div 
-              key={stock.symbol}
-              className={`rounded-xl border-l-4 ${getStatusColor(stock.status)} overflow-hidden`}
-            >
-              {/* Header - always visible */}
-              <div 
-                className="p-4 cursor-pointer active:bg-slate-700/30 transition-colors"
-                onClick={() => toggleExpand(stock.symbol)}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-lg">{stock.symbol}</span>
-                      {getStatusBadge(stock.status)}
-                    </div>
-                    <div className="text-xs text-slate-400 mt-0.5">{stock.name}</div>
-                    <div className="text-xs text-slate-500 mt-1 line-clamp-1">{stock.business}</div>
-                  </div>
-                  <div className="text-right ml-2">
-                    <div className="font-mono font-bold text-xl">
-                      ${stock.price.toFixed(2)}
-                    </div>
-                    <div className={`text-sm font-mono ${stock.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {stock.change >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
-                    </div>
+      ) : groupBySector ? (
+        // Grouped by Sector View
+        <div className="space-y-6">
+          {sectors.map(sector => {
+            const sectorStocks = stocks
+              .filter(s => s.sector === sector.id)
+              .sort((a, b) => {
+                const priority = { buy: 0, alert: 1, near: 2, watch: 3 }
+                return priority[a.status] - priority[b.status]
+              })
+            
+            if (sectorStocks.length === 0) return null
+            
+            const stats = getSectorStats(sector.id)
+            
+            return (
+              <div key={sector.id}>
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <h2 className="text-lg font-bold">{sector.name}</h2>
+                  <div className="flex gap-1 text-xs">
+                    {stats.buyCount > 0 && (
+                      <span className="px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">
+                        {stats.buyCount} 買點
+                      </span>
+                    )}
+                    {stats.nearCount > 0 && (
+                      <span className="px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400">
+                        {stats.nearCount} 接近
+                      </span>
+                    )}
+                    {stats.alertCount > 0 && (
+                      <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">
+                        {stats.alertCount} 警示
+                      </span>
+                    )}
                   </div>
                 </div>
-                
-                {/* Target progress */}
-                {stock.targetEntry && (
-                  <div className="mt-3">
-                    <div className="flex justify-between text-xs text-slate-400 mb-1">
-                      <span>目標 ${stock.targetEntry}</span>
-                      <span>
-                        {stock.price <= stock.targetEntry 
-                          ? '✅ 已到價！' 
-                          : `差 ${stock.distancePercent?.toFixed(1)}%`
-                        }
-                      </span>
-                    </div>
-                    <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all ${stock.price <= stock.targetEntry ? 'bg-green-500' : 'bg-blue-500'}`}
-                        style={{ width: `${Math.min(100, (stock.targetEntry / stock.price) * 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-                
-                <div className="text-center text-slate-500 text-xs mt-2">
-                  {expandedSymbol === stock.symbol ? '▲ 收起' : '▼ 展開詳情'}
+                <div className="space-y-2">
+                  {sectorStocks.map(renderStockCard)}
                 </div>
               </div>
-              
-              {/* Expanded details */}
-              {expandedSymbol === stock.symbol && (
-                <div className="px-4 pb-4 border-t border-slate-700 pt-3 space-y-3 bg-slate-800/50">
-                  <div>
-                    <div className="text-xs text-blue-400 font-semibold mb-1">💡 推薦原因</div>
-                    <div className="text-sm text-slate-300">{stock.buyReason}</div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="text-xs text-green-400 font-semibold mb-1">🎯 進場建議</div>
-                      <div className="text-sm text-slate-300">{stock.entryNote}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-purple-400 font-semibold mb-1">⏱️ 持有週期</div>
-                      <div className="text-sm text-slate-300">{stock.holdPeriod}</div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-xs text-orange-400 font-semibold mb-1">🚪 出場策略</div>
-                    <div className="text-sm text-slate-300">{stock.exitStrategy}</div>
-                  </div>
-                  
-                  {stock.stopLoss && (
-                    <div>
-                      <div className="text-xs text-red-400 font-semibold mb-1">🛑 停損</div>
-                      <div className="text-sm text-slate-300">{typeof stock.stopLoss === 'number' ? `$${stock.stopLoss}` : stock.stopLoss}</div>
-                    </div>
-                  )}
-                  
-                  {stock.invalidIf && (
-                    <div>
-                      <div className="text-xs text-red-400 font-semibold mb-1">⚠️ 論點失效</div>
-                      <div className="text-sm text-slate-300">{stock.invalidIf}</div>
-                    </div>
-                  )}
-                  
-                  {stock.catalyst && (
-                    <div>
-                      <div className="text-xs text-yellow-400 font-semibold mb-1">📅 催化劑</div>
-                      <div className="text-sm text-slate-300">{stock.catalyst}</div>
-                    </div>
-                  )}
-                  
-                  <div className="text-xs text-slate-500 pt-2 border-t border-slate-700">
-                    📖 來源：{stock.source}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+            )
+          })}
+        </div>
+      ) : (
+        // Flat View (sorted by status)
+        <div className="space-y-3">
+          {sortedStocks.map(renderStockCard)}
         </div>
       )}
 

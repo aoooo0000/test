@@ -1,9 +1,42 @@
 {
   "lastUpdated": "2026-02-05",
+  "sectors": [
+    {
+      "name": "🤖 AI 半導體",
+      "id": "ai-semi",
+      "stocks": ["NVDA", "AMD", "TER", "AEHR"]
+    },
+    {
+      "name": "🔌 光通訊",
+      "id": "optical",
+      "stocks": ["VIAV", "CIEN", "AXTI", "GLW", "KEYS"]
+    },
+    {
+      "name": "⚡ 量子 & 儲能",
+      "id": "quantum-energy",
+      "stocks": ["IONQ", "EOSE"]
+    },
+    {
+      "name": "🏦 金融",
+      "id": "finance",
+      "stocks": ["MS", "INTC"]
+    },
+    {
+      "name": "📱 科技巨頭",
+      "id": "big-tech",
+      "stocks": ["AAPL"]
+    },
+    {
+      "name": "🎰 高風險",
+      "id": "speculative",
+      "stocks": ["ALTS", "VSH"]
+    }
+  ],
   "stocks": [
     {
       "symbol": "NVDA",
       "name": "NVIDIA",
+      "sector": "ai-semi",
       "business": "AI GPU 龍頭，資料中心/遊戲/自駕晶片",
       "buyReason": "空頭藉 OpenAI 談判破裂打壓股價，洗籌碼中。等 Q2 佈局完 + Rubin 發布後會拉。",
       "targetEntry": 169,
@@ -19,6 +52,7 @@
     {
       "symbol": "TER",
       "name": "Teradyne",
+      "sector": "ai-semi",
       "business": "AI 測試設備龍頭，半導體/機器人測試",
       "buyReason": "2026 年 AI 新神股！營收+44%、EPS 超預期 30%，Q1 指引超預期 66%。AI 測試從落後指標變前置指標。",
       "targetEntry": null,
@@ -34,6 +68,7 @@
     {
       "symbol": "AMD",
       "name": "AMD",
+      "sector": "ai-semi",
       "business": "CPU/GPU 大廠，AI 加速器 MI300",
       "buyReason": "半導體龍頭，財報後大跌是進場機會",
       "targetEntry": 200,
@@ -47,53 +82,25 @@
       "priority": 3
     },
     {
-      "symbol": "IONQ",
-      "name": "IonQ",
-      "business": "量子計算龍頭，離子阱量子電腦",
-      "buyReason": "量子計算龍頭，併購 SKYT 具戰略意義。短線承壓但長線看好。",
-      "targetEntry": 36,
-      "entryNote": "$36 為佈局甜蜜點",
-      "holdPeriod": "長線",
-      "exitStrategy": "長線持有",
+      "symbol": "AEHR",
+      "name": "Aehr Test",
+      "sector": "ai-semi",
+      "business": "晶圓級測試設備，Hyperscaler 訂單",
+      "buyReason": "打入 Hyperscaler 直接訂單，下半年訂單將暴增 10 倍。高毛利耗材 WaferPak 印鈔機模式。",
+      "targetEntry": null,
+      "entryNote": "持續觀察，等訂單確認",
+      "holdPeriod": "中長線",
+      "exitStrategy": "等訂單暴增確認",
       "stopLoss": null,
-      "invalidIf": null,
-      "catalyst": null,
-      "source": "MimiVsJames 2026-01-27",
-      "priority": 4
-    },
-    {
-      "symbol": "AXTI",
-      "name": "AXT Inc",
-      "business": "光通訊基板，砷化鎵/磷化銦晶圓",
-      "buyReason": "光通訊板塊，大人開始買回",
-      "targetEntry": 17,
-      "entryNote": "$17（大人買回價位）",
-      "holdPeriod": "波段",
-      "exitStrategy": "跌破 10MA 出場",
-      "stopLoss": "10MA",
-      "invalidIf": null,
-      "catalyst": null,
-      "source": "MimiVsJames 2026-01-23",
-      "priority": 5
-    },
-    {
-      "symbol": "KEYS",
-      "name": "Keysight",
-      "business": "測試設備龍頭，5G/6G 測試 + 航太國防",
-      "buyReason": "航太國防 23%、網路數據 48%、軟體服務 37%（高毛利 80%+）。2025 Q4 訂單量成長 14% 領先營收。",
-      "targetEntry": 216,
-      "entryNote": "$216（10MA）",
-      "holdPeriod": "波段",
-      "exitStrategy": "波段多頭，短線不要賺 10-20% 就閃",
-      "stopLoss": null,
-      "invalidIf": null,
-      "catalyst": null,
-      "source": "MimiVsJames 2026-01-29",
-      "priority": 6
+      "invalidIf": "液冷零件供應問題",
+      "catalyst": "2026 H2 訂單暴增至 6000-8000 萬",
+      "source": "MimiVsJames 2026-01-16",
+      "priority": 13
     },
     {
       "symbol": "VIAV",
       "name": "Viavi Solutions",
+      "sector": "optical",
       "business": "AI 資料中心測試設備，矽光子概念",
       "buyReason": "10/16 推薦至今已近翻倍，仍有翻倍空間。財報確認 AI 基礎設施支出延伸到網路通訊層。",
       "targetEntry": 19,
@@ -109,6 +116,7 @@
     {
       "symbol": "CIEN",
       "name": "Ciena",
+      "sector": "optical",
       "business": "光傳輸設備霸主，WaveLogic 6 技術",
       "buyReason": "1.6T 核心技術。客戶包括 MSFT/GOOG/META，網路平台業務 >80%，巨額積壓訂單。",
       "targetEntry": 241,
@@ -122,23 +130,25 @@
       "priority": 8
     },
     {
-      "symbol": "EOSE",
-      "name": "Eos Energy",
-      "business": "長時儲能龍頭，鋅鹵化物電池",
-      "buyReason": "100% 不可燃、20 年壽命、非中國供應鏈。2026 三大催化劑：Z3 產線、DOE 貸款、訂單交付。",
-      "targetEntry": 13,
-      "entryNote": "逢低 $11-13 承接，突破 $19.86 加碼",
-      "holdPeriod": "中長線",
-      "exitStrategy": "目標 $28-32",
-      "stopLoss": null,
+      "symbol": "AXTI",
+      "name": "AXT Inc",
+      "sector": "optical",
+      "business": "光通訊基板，砷化鎵/磷化銦晶圓",
+      "buyReason": "光通訊板塊，大人開始買回",
+      "targetEntry": 17,
+      "entryNote": "$17（大人買回價位）",
+      "holdPeriod": "波段",
+      "exitStrategy": "跌破 10MA 出場",
+      "stopLoss": "10MA",
       "invalidIf": null,
-      "catalyst": "Z3 產線、DOE 貸款",
-      "source": "MimiVsJames 2026-01-19",
-      "priority": 9
+      "catalyst": null,
+      "source": "MimiVsJames 2026-01-23",
+      "priority": 5
     },
     {
       "symbol": "GLW",
       "name": "Corning",
+      "sector": "optical",
       "business": "光纖/玻璃基板龍頭",
       "buyReason": "光通訊族群資金回流，上週已推薦買進",
       "targetEntry": null,
@@ -152,8 +162,57 @@
       "priority": 10
     },
     {
+      "symbol": "KEYS",
+      "name": "Keysight",
+      "sector": "optical",
+      "business": "測試設備龍頭，5G/6G 測試 + 航太國防",
+      "buyReason": "航太國防 23%、網路數據 48%、軟體服務 37%（高毛利 80%+）。2025 Q4 訂單量成長 14% 領先營收。",
+      "targetEntry": 216,
+      "entryNote": "$216（10MA）",
+      "holdPeriod": "波段",
+      "exitStrategy": "波段多頭，短線不要賺 10-20% 就閃",
+      "stopLoss": null,
+      "invalidIf": null,
+      "catalyst": null,
+      "source": "MimiVsJames 2026-01-29",
+      "priority": 6
+    },
+    {
+      "symbol": "IONQ",
+      "name": "IonQ",
+      "sector": "quantum-energy",
+      "business": "量子計算龍頭，離子阱量子電腦",
+      "buyReason": "量子計算龍頭，併購 SKYT 具戰略意義。短線承壓但長線看好。",
+      "targetEntry": 36,
+      "entryNote": "$36 為佈局甜蜜點",
+      "holdPeriod": "長線",
+      "exitStrategy": "長線持有",
+      "stopLoss": null,
+      "invalidIf": null,
+      "catalyst": null,
+      "source": "MimiVsJames 2026-01-27",
+      "priority": 4
+    },
+    {
+      "symbol": "EOSE",
+      "name": "Eos Energy",
+      "sector": "quantum-energy",
+      "business": "長時儲能龍頭，鋅鹵化物電池",
+      "buyReason": "100% 不可燃、20 年壽命、非中國供應鏈。2026 三大催化劑：Z3 產線、DOE 貸款、訂單交付。",
+      "targetEntry": 13,
+      "entryNote": "逢低 $11-13 承接，突破 $19.86 加碼",
+      "holdPeriod": "中長線",
+      "exitStrategy": "目標 $28-32",
+      "stopLoss": null,
+      "invalidIf": null,
+      "catalyst": "Z3 產線、DOE 貸款",
+      "source": "MimiVsJames 2026-01-19",
+      "priority": 9
+    },
+    {
       "symbol": "MS",
       "name": "Morgan Stanley",
+      "sector": "finance",
       "business": "投資銀行，Warsh 老東家",
       "buyReason": "Warsh（沃太郎）的老東家，可能有私下「照顧」。銀行監管鬆綁受惠。",
       "targetEntry": null,
@@ -167,38 +226,9 @@
       "priority": 11
     },
     {
-      "symbol": "AAPL",
-      "name": "Apple",
-      "business": "消費電子龍頭，服務毛利 70%+",
-      "buyReason": "輕資產印鈔機！ROIC 50%+。財報超預期：營收 143.8B(+16%)、EPS 2.84(+19%)。中國大中華區 +38%。",
-      "targetEntry": 233,
-      "entryNote": "在 233 年線附近積極建立長線倉位，有跌就買",
-      "holdPeriod": "長線",
-      "exitStrategy": "目標 $385",
-      "stopLoss": null,
-      "invalidIf": null,
-      "catalyst": null,
-      "source": "MimiVsJames 2026-01-30",
-      "priority": 12
-    },
-    {
-      "symbol": "AEHR",
-      "name": "Aehr Test",
-      "business": "晶圓級測試設備，Hyperscaler 訂單",
-      "buyReason": "打入 Hyperscaler 直接訂單，下半年訂單將暴增 10 倍。高毛利耗材 WaferPak 印鈔機模式。",
-      "targetEntry": null,
-      "entryNote": "持續觀察，等訂單確認",
-      "holdPeriod": "中長線",
-      "exitStrategy": "等訂單暴增確認",
-      "stopLoss": null,
-      "invalidIf": "液冷零件供應問題",
-      "catalyst": "2026 H2 訂單暴增至 6000-8000 萬",
-      "source": "MimiVsJames 2026-01-16",
-      "priority": 13
-    },
-    {
       "symbol": "INTC",
       "name": "Intel",
+      "sector": "finance",
       "business": "CPU 大廠，18A 製程轉型中",
       "buyReason": "CFO 以 $42.5 買入，美國政府持股 10%（$40 保底），分拆計畫 Project Independence 預計 2027-28 年",
       "targetEntry": null,
@@ -212,23 +242,25 @@
       "priority": 14
     },
     {
-      "symbol": "VSH",
-      "name": "Vishay",
-      "business": "高階被動元件，轉機股",
-      "buyReason": "受惠 AI 伺服器功率電感、鉭電容需求。週線 W 底成型。",
-      "targetEntry": 18,
-      "entryNote": "$18 進場，站穩 $19-20 加碼",
-      "holdPeriod": "波段",
-      "exitStrategy": "目標 $23",
-      "stopLoss": "年線",
+      "symbol": "AAPL",
+      "name": "Apple",
+      "sector": "big-tech",
+      "business": "消費電子龍頭，服務毛利 70%+",
+      "buyReason": "輕資產印鈔機！ROIC 50%+。財報超預期：營收 143.8B(+16%)、EPS 2.84(+19%)。中國大中華區 +38%。",
+      "targetEntry": 233,
+      "entryNote": "在 233 年線附近積極建立長線倉位，有跌就買",
+      "holdPeriod": "長線",
+      "exitStrategy": "目標 $385",
+      "stopLoss": null,
       "invalidIf": null,
-      "catalyst": "Q1 指引",
-      "source": "MimiVsJames 2026-01-21",
-      "priority": 15
+      "catalyst": null,
+      "source": "MimiVsJames 2026-01-30",
+      "priority": 12
     },
     {
       "symbol": "ALTS",
       "name": "ALT5 Sigma",
+      "sector": "speculative",
       "business": "WLFI 槓桿 ETF，三爺家族借殼",
       "buyReason": "WLFI 借 1500 萬給 ALTS 回購股票。ALT5 Pay 已集成 USD1 和 TRUMP Coin。「合規」是護城河。",
       "targetEntry": null,
@@ -240,6 +272,22 @@
       "catalyst": "2026-11 期中大選",
       "source": "MimiVsJames 2026-02-03",
       "priority": 16
+    },
+    {
+      "symbol": "VSH",
+      "name": "Vishay",
+      "sector": "speculative",
+      "business": "高階被動元件，轉機股",
+      "buyReason": "受惠 AI 伺服器功率電感、鉭電容需求。週線 W 底成型。",
+      "targetEntry": 18,
+      "entryNote": "$18 進場，站穩 $19-20 加碼",
+      "holdPeriod": "波段",
+      "exitStrategy": "目標 $23",
+      "stopLoss": "年線",
+      "invalidIf": null,
+      "catalyst": "Q1 指引",
+      "source": "MimiVsJames 2026-01-21",
+      "priority": 15
     }
   ]
 }
