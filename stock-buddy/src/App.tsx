@@ -25,12 +25,16 @@ interface StockData extends WatchlistStock {
   distancePercent: number | null
 }
 
+// FMP API key (free tier)
+const FMP_API_KEY = 'WKxcam5hR0ZB8zpHAvarAe5ZxDHh9nz6'
+
 function App() {
   const [stocks, setStocks] = useState<StockData[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null)
   const [watchlist, setWatchlist] = useState<WatchlistStock[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   // Load watchlist data
   useEffect(() => {
@@ -39,25 +43,39 @@ function App() {
       .then(data => {
         setWatchlist(data.stocks)
       })
-      .catch(err => console.error('Failed to load watchlist:', err))
+      .catch(err => {
+        console.error('Failed to load watchlist:', err)
+        setError('無法載入 Watchlist')
+      })
   }, [])
 
   const fetchStockData = async () => {
     if (watchlist.length === 0) return
     
     setLoading(true)
+    setError(null)
     try {
       const symbols = watchlist.map(w => w.symbol).join(',')
+      // Using FMP API (supports CORS)
       const response = await fetch(
-        `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`
+        `https://financialmodelingprep.com/api/v3/quote/${symbols}?apikey=${FMP_API_KEY}`
       )
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+      
       const data = await response.json()
       
-      const results: StockData[] = data.quoteResponse.result.map((quote: any) => {
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error('No data received')
+      }
+      
+      const results: StockData[] = data.map((quote: any) => {
         const watchItem = watchlist.find(w => w.symbol === quote.symbol)
         if (!watchItem) return null
         
-        const price = quote.regularMarketPrice
+        const price = quote.price
         const target = watchItem.targetEntry
         
         let status: 'buy' | 'near' | 'watch' | 'alert' = 'watch'
@@ -68,13 +86,13 @@ function App() {
           if (price <= target) status = 'buy'
           else if (distancePercent <= 5) status = 'near'
         }
-        if (quote.regularMarketChangePercent < -5) status = 'alert'
+        if (quote.changesPercentage < -5) status = 'alert'
         
         return {
           ...watchItem,
           price,
-          change: quote.regularMarketChange,
-          changePercent: quote.regularMarketChangePercent,
+          change: quote.change,
+          changePercent: quote.changesPercentage,
           status,
           distancePercent
         }
@@ -86,8 +104,9 @@ function App() {
         return priority[a.status] - priority[b.status]
       }))
       setLastUpdate(new Date())
-    } catch (error) {
-      console.error('Error fetching stock data:', error)
+    } catch (err) {
+      console.error('Error fetching stock data:', err)
+      setError('無法取得股價資料')
     }
     setLoading(false)
   }
@@ -95,7 +114,7 @@ function App() {
   useEffect(() => {
     if (watchlist.length > 0) {
       fetchStockData()
-      const interval = setInterval(fetchStockData, 30000)
+      const interval = setInterval(fetchStockData, 60000) // 60 seconds for FMP rate limit
       return () => clearInterval(interval)
     }
   }, [watchlist])
@@ -114,7 +133,7 @@ function App() {
       case 'buy': return <span className="px-2 py-0.5 rounded-full bg-green-500 text-white text-xs font-bold">🎯 買點</span>
       case 'alert': return <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-xs font-bold">🔴 警示</span>
       case 'near': return <span className="px-2 py-0.5 rounded-full bg-yellow-500 text-black text-xs font-bold">🟡 接近</span>
-      default: return <span className="px-2 py-0.5 rounded-full bg-slate-600 text-white text-xs">觀察</span>
+      default: return <span className="px-2 py-0.5 rounded-full bg-slate-600 text-white text-xs">👀 觀察</span>
     }
   }
 
@@ -134,9 +153,16 @@ function App() {
         </p>
       </header>
 
+      {error && (
+        <div className="bg-red-500/20 border border-red-500 rounded-lg p-3 mb-4 text-center text-red-300">
+          ⚠️ {error}
+        </div>
+      )}
+
       {loading && stocks.length === 0 ? (
-        <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col justify-center items-center h-64 gap-3">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="text-slate-400 text-sm">取得股價中...</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -147,19 +173,19 @@ function App() {
             >
               {/* Header - always visible */}
               <div 
-                className="p-4 cursor-pointer"
+                className="p-4 cursor-pointer active:bg-slate-700/30 transition-colors"
                 onClick={() => toggleExpand(stock.symbol)}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-lg">{stock.symbol}</span>
                       {getStatusBadge(stock.status)}
                     </div>
                     <div className="text-xs text-slate-400 mt-0.5">{stock.name}</div>
                     <div className="text-xs text-slate-500 mt-1 line-clamp-1">{stock.business}</div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right ml-2">
                     <div className="font-mono font-bold text-xl">
                       ${stock.price.toFixed(2)}
                     </div>
@@ -222,7 +248,7 @@ function App() {
                   {stock.stopLoss && (
                     <div>
                       <div className="text-xs text-red-400 font-semibold mb-1">🛑 停損</div>
-                      <div className="text-sm text-slate-300">{stock.stopLoss}</div>
+                      <div className="text-sm text-slate-300">{typeof stock.stopLoss === 'number' ? `$${stock.stopLoss}` : stock.stopLoss}</div>
                     </div>
                   )}
                   
