@@ -71,32 +71,34 @@ function App() {
         throw new Error('No data received')
       }
       
-      const results: StockData[] = data.map((quote: any) => {
-        const watchItem = watchlist.find(w => w.symbol === quote.symbol)
-        if (!watchItem) return null
-        
-        const price = quote.price
-        const target = watchItem.targetEntry
-        
-        let status: 'buy' | 'near' | 'watch' | 'alert' = 'watch'
-        let distancePercent: number | null = null
-        
-        if (target) {
-          distancePercent = ((price - target) / target) * 100
-          if (price <= target) status = 'buy'
-          else if (distancePercent <= 5) status = 'near'
-        }
-        if (quote.changesPercentage < -5) status = 'alert'
-        
-        return {
-          ...watchItem,
-          price,
-          change: quote.change,
-          changePercent: quote.changesPercentage,
-          status,
-          distancePercent
-        }
-      }).filter(Boolean)
+      const results: StockData[] = data
+        .map((quote: any) => {
+          const watchItem = watchlist.find(w => w.symbol === quote.symbol)
+          if (!watchItem) return null
+          
+          const price = quote.price
+          const target = watchItem.targetEntry
+          
+          let status: 'buy' | 'near' | 'watch' | 'alert' = 'watch'
+          let distancePercent: number | null = null
+          
+          if (target) {
+            distancePercent = ((price - target) / target) * 100
+            if (price <= target) status = 'buy'
+            else if (distancePercent <= 5) status = 'near'
+          }
+          if (quote.changesPercentage < -5) status = 'alert'
+          
+          return {
+            ...watchItem,
+            price,
+            change: quote.change,
+            changePercent: quote.changesPercentage,
+            status,
+            distancePercent
+          }
+        })
+        .filter((item): item is StockData => item !== null)
       
       // Sort: buy > alert > near > watch
       setStocks(results.sort((a, b) => {
